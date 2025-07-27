@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter;
 public abstract class Conta implements IConta{
 
 	protected int numeroConta;
-	protected double saldo = 0;
+	protected double saldo = 0.00;
 	protected Banco banco;
 	protected Cliente cliente;
 	
@@ -23,21 +23,15 @@ public abstract class Conta implements IConta{
 		return cliente;
 	}
 
-
-
 	public void setCliente(Cliente cliente) {
 		this.cliente = cliente;
 	}
-
-
 
 	public Conta(Banco banco, Cliente cliente, int numeroConta) {
 		this.banco = banco;
 		this.cliente = cliente;
 		this.numeroConta = numeroConta;
 	}	
-	
-	
 	
 	@Override
 	public void sacar(double valorSaque) {
@@ -57,7 +51,7 @@ public abstract class Conta implements IConta{
 
 	@Override
 	public void transferir(double valorTransferencia, Conta contaDestino) {
-		if(saldo < valorTransferencia) {
+		if(this.saldo < valorTransferencia) {
 			System.out.println("Saldo insuficiente, verifique seu extrato!");
 		} else {
 			this.sacar(valorTransferencia);
@@ -68,7 +62,7 @@ public abstract class Conta implements IConta{
 
 	public void formatarData() {
 		LocalDate dataAtual = LocalDate.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         String dataFormatada = dataAtual.format(formatter);
 		System.out.println("Data impressão " + dataFormatada);
 	}
@@ -78,15 +72,9 @@ public abstract class Conta implements IConta{
 		formatarData();
 		System.out.println(String.format("Banco: %d - %s", this.banco.getNumero(), 
 				this.banco.getNome()));
-		System.out.println(String.format("Agência: %d", this,banco.getAgencia()));
+		System.out.println(String.format("Agência: %d", this.banco.getAgencia()));
 		System.out.println(String.format("Cliente: %s", this.cliente.getNomeCompleto()));
-		System.out.println(String.format("Saldo: %d", this.saldo));
-	}
-	
-	@Override
-	public void solicitarEmprestimo() {
-		double credito = (25 / 100) * cliente.getRendaMedia();		
-		System.out.println("Crétido pré-aprovado é de " + credito);		
+		System.out.println(String.format("Saldo: %.2f", this.getSaldo()));
 	}
 	
 }

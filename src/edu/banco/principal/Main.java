@@ -77,7 +77,7 @@ public class Main {
 		
 		// Parte 3 - Cadastro de contas
 		System.out.println("Cadastro de contas");
-		System.out.println("Informe quantos contas você deseja cadastrar.");
+		System.out.println("Informe quantas contas você deseja cadastrar.");
 		
 		tamanho = scanner.nextInt();
 		validarTamanhoVetor(tamanho, scanner);	
@@ -116,12 +116,25 @@ public class Main {
 		
 		//Parte 4 - Realizar movimentações bancárias		
 		int[] resultados = new int[2];
-		menuOperacoes(scanner, correntes, poupancas, resultados);
 		
-		// Parte 5 - Consultar cadastros e movimentação		
-		menuConsulta(scanner, bancos, clientes, correntes, poupancas);
+		System.out.println(String.format("\nAcessando sua conta: "));
+		System.out.println("Informe o numero da conta desejada:");		
+		int conta = scanner.nextInt();	
 		
-		System.out.println("Sistema finalizado!");
+		for(int j = 1; j <= 4; j++) { // caso a validação não encontre a conta, há 3 tentativas.		
+			Validador.NumeroConta(scanner, conta, correntes, poupancas, resultados);
+			if(resultados[0] == 1 || resultados[0] == 2) {
+				menuOperacoes(scanner, correntes, poupancas, resultados, conta);
+				
+				// Parte 5 - Consultar cadastros e movimentação		
+				menuConsulta(scanner, bancos, clientes, correntes, poupancas);
+				
+				break;
+			} else if(j == 4) {
+				System.out.println("Numero de tentativas excedidas!");
+				break;
+			}
+		}
 		
 		scanner.close();		
 	}
@@ -135,6 +148,103 @@ public class Main {
 		}
 							
 		return tamanho;
+	}
+	
+	public static void menuOperacoes(Scanner scanner, ContaCorrente[] correntes, ContaPoupanca[] poupancas, 
+			int[] resultados, int conta) {
+		
+		System.out.println("Selecione a operação desejada: ");
+		System.out.println("1 - Depositar");
+		System.out.println("2 - Sacar");
+		System.out.println("3 - Transferir");
+		System.out.println("4 - Emprestimo Pré-aprovado");
+		System.out.println("5 - Finalizar operação");		
+		int operacao = scanner.nextInt();
+	
+		int tipoConta = resultados[0]; // retorna que a conta existe e o tipo dela 
+		int localConta = resultados[1]; // retorna em qual indice a conta está
+		char continuarOperacao;
+		
+		switch(operacao) {
+			case 1:
+				System.out.println("Informe o valor do depósito: ");
+				double valorDeposito = scanner.nextDouble();
+				if(tipoConta == 1) {
+					correntes[localConta].depositar(valorDeposito);
+				} else {
+					poupancas[localConta].depositar(valorDeposito);
+				}
+				System.out.println("Realizar nova operação? 'S' sim, 'N' não");
+				continuarOperacao = scanner.next().charAt(0);
+				if(continuarOperacao == 'S' || continuarOperacao == 's') {
+					menuOperacoes(scanner, correntes, poupancas, resultados, conta);
+				}
+				break;
+			case 2:
+				System.out.println("Informe o valor do saque: ");
+				double valorSaque = scanner.nextDouble();
+				if(tipoConta == 1) {
+					correntes[localConta].sacar(valorSaque);
+				} else {
+					poupancas[localConta].sacar(valorSaque);
+				}
+				System.out.println("Realizar nova operação? 'S' sim, 'N' não");
+				continuarOperacao = scanner.next().charAt(0);
+				if(continuarOperacao == 'S' || continuarOperacao == 's') {
+					menuOperacoes(scanner, correntes, poupancas, resultados, conta);
+				}
+				break;
+			case 3:
+				System.out.println("Informe o valor da transferência: ");
+				double valorTransferencia = scanner.nextDouble();
+				
+				System.out.println("Informe o numero da conta de destino: ");
+				int contaDestino = scanner.nextInt();
+								
+				if(tipoConta == 1) {
+					Validador.NumeroConta(scanner, contaDestino, correntes, poupancas, resultados);
+					contaDestino = resultados[1];
+					correntes[localConta].transferir(valorTransferencia, correntes[contaDestino]);
+					
+					resultados[0] = tipoConta; // retorna que a conta existe e o tipo dela 
+					resultados[1] = localConta; // retorna em qual indice a conta está
+				} else {
+					Validador.NumeroConta(scanner, contaDestino, correntes, poupancas, resultados);
+					contaDestino = resultados[1];
+					poupancas[localConta].transferir(valorTransferencia, poupancas[contaDestino]);
+				}
+				System.out.println("Realizar nova operação? 'S' sim, 'N' não");
+				continuarOperacao = scanner.next().charAt(0);
+				if(continuarOperacao == 'S' || continuarOperacao == 's') {
+					menuOperacoes(scanner, correntes, poupancas, resultados, conta);
+				}
+				break;
+			case 4:
+				if(tipoConta == 1) {
+					// correntes[localConta].solicitarEmprestimo(correntes[localConta].getCliente().getRendaMedia());
+					correntes[localConta].solicitarEmprestimo();					
+					correntes[localConta].contratarEmprestimo(scanner);					
+				} else {
+					System.out.println("Linha de crédito disponível apenas para Conta Corrente.");
+				}				
+				
+				System.out.println("Realizar nova operação? 'S' sim, 'N' não");
+				continuarOperacao = scanner.next().charAt(0);
+				if(continuarOperacao == 'S' || continuarOperacao == 's') {
+					menuOperacoes(scanner, correntes, poupancas, resultados, conta);
+				}
+				break;				
+			case 5:
+				System.out.println("Operação finalizada");
+				break;
+			default:
+				System.out.println("Operação não localizada! Tente novamente.");	
+				System.out.println("Realizar nova operação? 'S' sim, 'N' não");
+				continuarOperacao = scanner.next().charAt(0);
+				if(continuarOperacao == 'S' || continuarOperacao == 's') {
+					menuOperacoes(scanner, correntes, poupancas, resultados, conta);
+				}
+		}
 	}
 	
 	public static void menuConsulta(Scanner scanner, Banco[] bancos, Cliente[] clientes, ContaCorrente[] correntes, ContaPoupanca[] poupancas) {
@@ -178,82 +288,6 @@ public class Main {
 			default:
 				System.out.println("Opção inválida! Tente novamente.");
 				menuConsulta(scanner, bancos, clientes, correntes, poupancas);
-		}
-	}
-	
-	
-	public static void menuOperacoes(Scanner scanner, ContaCorrente[] correntes, ContaPoupanca[] poupancas, int[] resultados) {
-		System.out.println("Selecione a operação desejada: ");
-		System.out.println("1 - Sacar");
-		System.out.println("2 - Depositar");
-		System.out.println("3 - Transferir");
-		System.out.println("4 - Emprestimo Pré-aprovado");
-		System.out.println("5 - Proximo menu...");
-		
-		int operacao = scanner.nextInt();
-				
-		System.out.println("Informe o numero da conta desejada:");
-		
-		int conta = scanner.nextInt();
-		
-		Validador.NumeroConta(scanner, conta, correntes, poupancas, resultados);
-		
-		int i = resultados[0];
-		int contaLocalizada = resultados[1];
-		
-		
-		switch(operacao) {
-			case 1:
-				System.out.println("Informe o valor do saque: ");
-				double valorSaque = scanner.nextDouble();
-				if(resultados[i] == 1) {
-					correntes[contaLocalizada].sacar(valorSaque);
-				} else {
-					poupancas[contaLocalizada].sacar(valorSaque);
-				}
-				menuOperacoes(scanner, correntes, poupancas, resultados);
-				break;
-			case 2:
-				System.out.println("Informe o valor do depósito: ");
-				double valorDeposito = scanner.nextDouble();
-				if(resultados[i] == 1) {
-					correntes[contaLocalizada].depositar(valorDeposito);
-				} else {
-					poupancas[contaLocalizada].depositar(valorDeposito);
-				}
-				menuOperacoes(scanner, correntes, poupancas, resultados);
-				break;
-			case 3:
-				System.out.println("Informe o valor da transferência: ");
-				double valorTransferencia = scanner.nextDouble();
-				
-				System.out.println("Informe o numero da conta de destino: ");
-				int contaDestino = scanner.nextInt();
-				
-				Validador.NumeroConta(scanner, contaDestino, correntes, poupancas, resultados);
-				contaDestino = resultados[1];
-				
-				if(resultados[i] == 1) {
-					correntes[contaLocalizada].transferir(valorTransferencia, correntes[contaDestino]);
-				} else {
-					poupancas[contaLocalizada].transferir(valorTransferencia, correntes[contaDestino]);
-				}
-				menuOperacoes(scanner, correntes, poupancas, resultados);
-				break;
-			case 4:
-				if(resultados[i] == 1) {
-					correntes[contaLocalizada].solicitarEmprestimo();
-				} else {
-					poupancas[contaLocalizada].solicitarEmprestimo();
-				}
-				menuOperacoes(scanner, correntes, poupancas, resultados);
-				break;				
-			case 5:
-				System.out.println("Seguindo para o próximo menu...");
-				break;
-			default:
-				System.out.println("Opração não localizada! Tente novamente.");	
-				menuOperacoes(scanner, correntes, poupancas, resultados);
 		}
 	}
 }
